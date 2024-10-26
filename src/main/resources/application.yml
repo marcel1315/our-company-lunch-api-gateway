@@ -1,0 +1,18 @@
+server:
+  port: 8080
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: auth
+          uri: http://localhost:9020
+          predicates:
+            - Path=/users/**
+        - id: notification
+          uri: http://localhost:8090
+          predicates:
+            - Path=/notifications/**
+        - id: default-route
+          uri: http://localhost:8085
+          predicates:
+            - Path=/**
