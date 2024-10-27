@@ -9,5 +9,4 @@ public class OurCompanyLunchApiGatewayApplication {
   public static void main(String[] args) {
     SpringApplication.run(OurCompanyLunchApiGatewayApplication.class, args);
   }
-
 }

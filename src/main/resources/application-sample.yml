@@ -1,0 +1,4 @@
+common:
+  jwt:
+    secret:
+    expired-in-hour: 24

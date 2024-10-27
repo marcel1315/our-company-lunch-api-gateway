@@ -1,6 +1,6 @@
-server:
-  port: 8080
 spring:
+  profiles:
+    active: "local"
   cloud:
     gateway:
       routes:
@@ -16,3 +16,5 @@ spring:
           uri: http://localhost:8085
           predicates:
             - Path=/**
+server:
+  port: 8080
