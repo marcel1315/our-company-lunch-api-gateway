@@ -53,7 +53,7 @@ public class TokenProvider {
 
   private Mono<Claims> parseClaimsCache(String token) {
     if (!StringUtils.hasText(token)) {
-      return Mono.error(IllegalArgumentException::new);
+      return Mono.empty();
     }
 
     return Mono.fromCallable(() ->
