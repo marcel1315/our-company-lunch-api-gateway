@@ -1,7 +1,6 @@
 package com.marceldev.ourcompanylunchapigateway.token;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -14,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.util.StringUtils;
+import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 public class TokenProvider {
@@ -41,48 +41,47 @@ public class TokenProvider {
         .compact();
   }
 
-  public String getUsername(String token) {
-    return this.parseClaims(token).getSubject();
+  public Mono<String> getUsername(String token) {
+    return parseClaimsCache(token)
+        .map(Claims::getSubject);
   }
 
-  public String getRole(String token) {
-    return this.parseClaims(token).get(KEY_ROLE, String.class);
+  public Mono<String> getRole(String token) {
+    return parseClaimsCache(token)
+        .map(claims -> claims.get(KEY_ROLE, String.class));
   }
 
-  public boolean validateToken(String token) {
+  private Mono<Claims> parseClaimsCache(String token) {
     if (!StringUtils.hasText(token)) {
-      return false;
+      return Mono.error(IllegalArgumentException::new);
     }
 
-    Claims claims = this.parseClaims(token);
-    return claims.getExpiration().after(new Date());
+    return Mono.fromCallable(() ->
+            Jwts.parser()
+                .verifyWith(getSecretKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+        )
+        .cache();
   }
 
-  private Claims parseClaims(String token) {
-    try {
-      return Jwts.parser()
-          .verifyWith(getSecretKey())
-          .build()
-          .parseSignedClaims(token)
-          .getPayload();
-    } catch (ExpiredJwtException e) {
-      return e.getClaims();
-    }
+  public Mono<Authentication> getAuthentication(String token) {
+    return Mono.zip(getUsername(token), getRole(token))
+        .map(tuple -> {
+          String username = tuple.getT1();
+          GrantedAuthority authority = new SimpleGrantedAuthority(tuple.getT2());
+          return new UsernamePasswordAuthenticationToken(
+              username,
+              null,
+              List.of(authority)
+          );
+        });
   }
 
   private SecretKey getSecretKey() {
     byte[] keyBytes = this.secretKey.getBytes(StandardCharsets.UTF_8);
     return new SecretKeySpec(keyBytes, "HmacSHA512");
-  }
-
-  public Authentication getAuthentication(String token) {
-    String username = getUsername(token);
-    GrantedAuthority authority = new SimpleGrantedAuthority(getRole(token));
-    return new UsernamePasswordAuthenticationToken(
-        username,
-        null,
-        List.of(authority)
-    );
   }
 
   private long getExpiredInSecond() {

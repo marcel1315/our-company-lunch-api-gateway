@@ -15,7 +15,8 @@ import org.springframework.security.web.server.authentication.AuthenticationWebF
 public class SecurityConfig {
 
   @Bean
-  public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http, AuthenticationWebFilter jwtAuthenticationWebFilter) {
+  public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http,
+      AuthenticationWebFilter jwtAuthenticationWebFilter) {
     http
         .csrf(CsrfSpec::disable)
         .httpBasic(HttpBasicSpec::disable)

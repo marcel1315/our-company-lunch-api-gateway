@@ -13,11 +13,6 @@ public class JwtReactiveAuthenticationManager implements ReactiveAuthenticationM
   @Override
   public Mono<Authentication> authenticate(Authentication authentication) {
     String token = authentication.getCredentials().toString();
-
-    if (tokenProvider.validateToken(token)) {
-      return Mono.just(tokenProvider.getAuthentication(token));
-    } else {
-      return Mono.empty();
-    }
+    return tokenProvider.getAuthentication(token);
   }
 }
