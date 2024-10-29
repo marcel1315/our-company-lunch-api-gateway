@@ -11,11 +11,7 @@ public class JwtAuthenticationConverter implements ServerAuthenticationConverter
 
   @Override
   public Mono<Authentication> convert(ServerWebExchange exchange) {
-    String token = TokenResolveUtil.resolve(exchange.getRequest());
-
-    if (token != null) {
-      return Mono.just(new UsernamePasswordAuthenticationToken("", token));
-    }
-    return Mono.empty();
+    return TokenResolveUtil.resolve(exchange.getRequest())
+        .map(token -> new UsernamePasswordAuthenticationToken("", token));
   }
 }
